@@ -3,10 +3,10 @@
 
 # we run the algorithms as follows
 # search(grid, heuristic)
-# where heuristics = "bfs", "astar", "dlite"
 
-# a grid is an array, consisting of a two-dimensional array of cells with 1 = occupied, 0 = empty, the start cell, the goal cell, the cell to block, and the time to block it. 
+# where grid is an array, consisting of a two-dimensional array of cells with 1 = occupied, 0 = empty, the start cell, the goal cell, the cell to block, and the time to block it. 
 # For stationary grid problems where no cell is blocked, the block cell and time are both None
+# and heuristics = "bfs", "astar", "dlite"
 
 import sys
 import math
