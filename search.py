@@ -105,6 +105,55 @@ def report_counts(counts, name):
     """Print one line of the counts report."""
     print('{:9,d} nodes |{:9,d} goal |{:5.0f} cost |{:8,d} actions | {}'.format(
           counts['result'], counts['is_goal'], counts['cost'], counts['actions'], name))    
+
+# Grid Problems
+class GridProblem(Problem):
+    """Finding a path on a 2D grid with obstacles. Obstacles are (x, y) cells."""
+
+    def __init__(self, initial=(15, 30), goal=(130, 30), obstacles=(), **kwds):
+        Problem.__init__(self, initial=initial, goal=goal, 
+                         obstacles=set(obstacles) - {initial, goal}, **kwds)
+
+    directions = [(-1, -1), (0, -1), (1, -1),
+                  (-1, 0),           (1,  0),
+                  (-1, +1), (0, +1), (1, +1)]
+    
+    def action_cost(self, s, action, s1): return straight_line_distance(s, s1)
+    
+    def h(self, node): return straight_line_distance(node.state, self.goal)
+                  
+    def result(self, state, action): 
+        "Both states and actions are represented by (x, y) pairs."
+        return action if action not in self.obstacles else state
+    
+    def actions(self, state):
+        """You can move one cell in any of `directions` to a non-obstacle cell."""
+        x, y = state
+        return {(x + dx, y + dy) for (dx, dy) in self.directions} - self.obstacles
+
+# Grid Creation
+
+## The following can be used to create obstacles:
+    
+def random_lines(X=range(15, 130), Y=range(60), N=150, lengths=range(6, 12)):
+    """The set of cells in N random lines of the given lengths."""
+    result = set()
+    for _ in range(N):
+        x, y = random.choice(X), random.choice(Y)
+        dx, dy = random.choice(((0, 1), (1, 0)))
+        result |= line(x, y, dx, dy, random.choice(lengths))
+    return result
+
+def line(x, y, dx, dy, length):
+    """A line of `length` cells starting at (x, y) and going in (dx, dy) direction."""
+    return {(x + i * dx, y + i * dy) for i in range(length)}
+
+random.seed(42) # To make this reproducible
+
+frame = line(-10, 20, 0, 1, 20) | line(150, 20, 0, 1, 20)
+cup = line(102, 44, -1, 0, 15) | line(102, 20, -1, 0, 20) | line(102, 44, 0, -1, 24)
+
+# Some grid routing problems
           
 # Best First Search
           
