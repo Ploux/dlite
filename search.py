@@ -105,3 +105,50 @@ def report_counts(counts, name):
     """Print one line of the counts report."""
     print('{:9,d} nodes |{:9,d} goal |{:5.0f} cost |{:8,d} actions | {}'.format(
           counts['result'], counts['is_goal'], counts['cost'], counts['actions'], name))    
+          
+# Best First Search
+          
+def best_first_search(problem, f):
+    "Search nodes with minimum f(node) value first."
+    global reached # <<<<<<<<<<< Only change here
+    node = Node(problem.initial)
+    frontier = PriorityQueue([node], key=f)
+    reached = {problem.initial: node}
+    while frontier:
+        node = frontier.pop()
+        if problem.is_goal(node.state):
+            return node
+        for child in expand(problem, node):
+            s = child.state
+            if s not in reached or child.path_cost < reached[s].path_cost:
+                reached[s] = child
+                frontier.add(child)
+    return failure
+
+# Plotting
+
+def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
+    "Use matplotlib to plot the grid, obstacles, solution, and reached."
+    reached = list(reached)
+    plt.figure(figsize=(16, 10))
+    plt.axis('off'); plt.axis('equal')
+    plt.scatter(*transpose(grid.obstacles), marker='s', color='darkgrey')
+    plt.scatter(*transpose(reached), 1**2, marker='.', c='blue')
+    plt.scatter(*transpose(path_states(solution)), marker='s', c='blue')
+    plt.scatter(*transpose([grid.initial]), 9**2, marker='D', c='green')
+    plt.scatter(*transpose([grid.goal]), 9**2, marker='8', c='red')
+    if show: plt.show()
+    print('{} {} search: {:.1f} path cost, {:,d} states reached'
+          .format(' ' * 10, title, solution.path_cost, len(reached)))
+    
+def plots(grid, weights=(1.4, 2)): 
+    """Plot the results of 4 heuristic search algorithms for this grid."""
+    solution = astar_search(grid)
+    plot_grid_problem(grid, solution, reached, 'A* search')
+    for weight in weights:
+        solution = weighted_astar_search(grid, weight=weight)
+        plot_grid_problem(grid, solution, reached, '(b) Weighted ({}) A* search'.format(weight))
+    solution = greedy_bfs(grid)
+    plot_grid_problem(grid, solution, reached, 'Greedy best-first search')
+    
+def transpose(matrix): return list(zip(*matrix))
