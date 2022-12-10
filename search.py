@@ -470,10 +470,6 @@ def breadth_first_bfs(problem):
     
 def transpose(matrix): return list(zip(*matrix))
 
-# an improved grid plotting function
-# puts a border around the grid
-# renders each cell as a square
-
 def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
     "Use matplotlib to plot the grid, obstacles, solution, and reached."
     reached = list(reached)
@@ -490,7 +486,21 @@ def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
     if show: plt.show()
     print('{} {} search: {:.1f} path cost, {:,d} states reached'
           .format(' ' * 10, title, solution.path_cost, len(reached)))
+
+# draw blank grid
+def draw_grid(grid):
+    "Use matplotlib to draw the grid."
+    plt.figure(figsize=(grid.width, grid.height))
+    plt.plot([0, grid.width, grid.width, 0, 0], [0, 0, grid.height, grid.height, 0], 'k-')
+    plt.axis('off'); plt.axis('equal')
+    # divide the grid into cells
+    for x in range(grid.width + 1):
+        plt.plot([x, x], [0, grid.height], 'k-')
+    for y in range(grid.height + 1):
+        plt.plot([0, grid.width], [y, y], 'k-')
         
+    plt.show()
+    
  
         
 # Testing
@@ -500,3 +510,6 @@ def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
 reached = {}
 solution = breadth_first_bfs(small)
 plot_grid_problem(small, solution, reached, 'Breadth-first')
+
+# draw blank grid
+draw_grid(small)
