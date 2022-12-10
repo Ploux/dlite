@@ -141,10 +141,9 @@ def report_counts(counts, name):
 # Grid Problems
 class GridProblem(Problem):
     """Finding a path on a 2D grid with obstacles. Obstacles are (x, y) cells."""
-
-    def __init__(self, initial=(15, 30), goal=(130, 30), obstacles=(), **kwds):
-        Problem.__init__(self, initial=initial, goal=goal, 
-                         obstacles=set(obstacles) - {initial, goal}, **kwds)
+    # a grid has a height, width, initial, goal, and obstacles
+    def __init__(self, height=10, width=10, initial=(0, 0), goal=(9, 9), obstacles=(), **kwds):
+        Problem.__init__(self, height=height, width=width, initial=initial, goal=goal, obstacles=set(obstacles) - {initial, goal}, **kwds)
 
     directions = [(-1, -1), (0, -1), (1, -1),
                   (-1, 0),           (1,  0),
@@ -162,6 +161,8 @@ class GridProblem(Problem):
         """You can move one cell in any of `directions` to a non-obstacle cell."""
         x, y = state
         return {(x + dx, y + dy) for (dx, dy) in self.directions} - self.obstacles
+
+
 
 # Grid Creation
 
@@ -193,8 +194,12 @@ cup = line(102, 44, -1, 0, 15) | line(102, 20, -1, 0, 20) | line(102, 44, 0, -1,
 # The start is on the right side, three cells up from the bottom (2, 3)
 # The 3 obstacles are at (1, 1), (2, 1), and (2, 0)
 '''
-small = GridProblem(initial=(2, 3), goal=(0, 0), obstacles={(1, 1), (2, 1), (2, 0)})
 
+small = GridProblem(height=4, width=5, initial=(2, 3), goal=(0, 0), 
+                    obstacles=[(1, 1), (2, 1), (2, 0)])
+                    
+    
+    
 # Algorithms
           
 # Best First Search
@@ -224,32 +229,63 @@ def breadth_first_bfs(problem):
 
 # Plotting
 
-def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
-    "Use matplotlib to plot the grid, obstacles, solution, and reached."
-    reached = list(reached)
-    plt.figure(figsize=(16, 10))
-    plt.axis('off'); plt.axis('equal')
-    plt.scatter(*transpose(grid.obstacles), marker='s', color='darkgrey')
-    plt.scatter(*transpose(reached), 1**2, marker='.', c='blue')
-    plt.scatter(*transpose(path_states(solution)), marker='s', c='blue')
-    plt.scatter(*transpose([grid.initial]), 9**2, marker='D', c='green')
-    plt.scatter(*transpose([grid.goal]), 9**2, marker='8', c='red')
-    if show: plt.show()
-    print('{} {} search: {:.1f} path cost, {:,d} states reached'
-          .format(' ' * 10, title, solution.path_cost, len(reached)))
-    
-def plots(grid, weights=(1.4, 2)): 
-    """Plot the results of 4 heuristic search algorithms for this grid."""
-    solution = astar_search(grid)
-    plot_grid_problem(grid, solution, reached, 'A* search')
-    for weight in weights:
-        solution = weighted_astar_search(grid, weight=weight)
-        plot_grid_problem(grid, solution, reached, '(b) Weighted ({}) A* search'.format(weight))
-    solution = greedy_bfs(grid)
-    plot_grid_problem(grid, solution, reached, 'Greedy best-first search')
     
 def transpose(matrix): return list(zip(*matrix))
 
+# an improved grid plotting function
+# puts a border around the grid
+# renders each cell as a square
+
+def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
+    "Use pyplot to plot the grid, the solution, and the reached cells."
+    # create a grid of cells
+    # each cell is a square with a border
+    # the cell is colored according to the state of the cell
+    # white: unexplored
+    # gray: explored but not part of the solution
+    # black: part of the solution
+    # the goal is a red square
+    # the start is a green square
+    # the obstacles are blue squares
+    
+    plt.figure(figsize=(10, 10))
+    plt.title(title)
+    plt.axis('off')
+    plt.xlim(-1, grid.width)
+    plt.ylim(-1, grid.height)
+    plt.gca().invert_yaxis()
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.xticks(range(grid.width))
+    plt.yticks(range(grid.height))
+    plt.grid(True)
+    
+    # draw the grid
+    for x in range(grid.width):
+        for y in range(grid.height):
+            color = 'white'
+            if (x, y) in reached:
+                color = 'gray'
+            if (x, y) in solution:
+                color = 'black'
+            if (x, y) == grid.goal:
+                color = 'red'
+            if (x, y) == grid.initial:
+                color = 'green'
+            if (x, y) in grid.obstacles:
+                color = 'blue'
+            plt.gca().add_patch(plt.Rectangle((x, y), 1, 1, color=color, ec='black'))
+            
+    # draw the solution
+    if solution:
+        plt.plot([x for (x, y) in solution], [y for (x, y) in solution], 'k-')
+        
+    if show:
+        plt.show()
+        
+        
+                
+    
+        
 # Testing
 
 # perform breadth first search with small grid
