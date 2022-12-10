@@ -101,6 +101,11 @@ class PriorityQueue:
 
     def __len__(self): return len(self.items)    
 
+# straight-line distance between two points
+def straight_line_distance(A, B):
+    "Straight-line distance between two points."
+    return sum(abs(a - b)**2 for (a, b) in zip(A, B)) ** 0.5
+    
 # report stats on search algorithms
 class CountCalls:
     """Delegate all attribute gets to the object, and count them in ._counts"""
@@ -190,7 +195,7 @@ cup = line(102, 44, -1, 0, 15) | line(102, 20, -1, 0, 20) | line(102, 44, 0, -1,
 '''
 small = GridProblem(initial=(2, 3), goal=(0, 0), obstacles={(1, 1), (2, 1), (2, 0)})
 
-
+# Algorithms
           
 # Best First Search
           
@@ -210,6 +215,12 @@ def best_first_search(problem, f):
                 reached[s] = child
                 frontier.add(child)
     return failure
+
+# Breadth First Search
+
+def breadth_first_bfs(problem):
+    "Search shallowest nodes in the search tree first; using best-first."
+    return best_first_search(problem, f=len)    
 
 # Plotting
 
@@ -238,3 +249,11 @@ def plots(grid, weights=(1.4, 2)):
     plot_grid_problem(grid, solution, reached, 'Greedy best-first search')
     
 def transpose(matrix): return list(zip(*matrix))
+
+# Testing
+
+# perform breadth first search with small grid
+# plot and report results
+reached = {}
+solution = breadth_first_bfs(small)
+plot_grid_problem(small, solution, reached, 'Breadth-first')
