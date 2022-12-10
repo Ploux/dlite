@@ -154,12 +154,22 @@ frame = line(-10, 20, 0, 1, 20) | line(150, 20, 0, 1, 20)
 cup = line(102, 44, -1, 0, 15) | line(102, 20, -1, 0, 20) | line(102, 44, 0, -1, 24)
 
 # Some grid routing problems
+
+'''
+# a small grid, only 5x4 cells
+# The goal is in the lower left corner (0, 0)
+# The start is on the right side, three cells up from the bottom (2, 3)
+# The 3 obstacles are at (1, 1), (2, 1), and (2, 0)
+'''
+small = GridProblem(initial=(2, 3), goal=(0, 0), obstacles={(1, 1), (2, 1), (2, 0)})
+
+
           
 # Best First Search
           
 def best_first_search(problem, f):
     "Search nodes with minimum f(node) value first."
-    global reached # <<<<<<<<<<< Only change here
+    global reached
     node = Node(problem.initial)
     frontier = PriorityQueue([node], key=f)
     reached = {problem.initial: node}
