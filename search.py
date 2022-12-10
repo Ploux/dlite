@@ -429,11 +429,11 @@ cup = line(102, 44, -1, 0, 15) | line(102, 20, -1, 0, 20) | line(102, 44, 0, -1,
 '''
 # a small grid, only 5x4 cells
 # The goal is in the lower left corner (0, 0)
-# The start is on the right side, three cells up from the bottom (2, 3)
+# The start is on the right side, three cells up from the bottom (4, 2)
 # The 3 obstacles are at (1, 1), (2, 1), and (2, 0)
 '''
 
-small = GridProblem(height=4, width=5, initial=(2, 3), goal=(0, 0), 
+small = GridProblem(height=4, width=5, initial=(4, 2), goal=(0, 0), 
                     obstacles=[(1, 1), (2, 1), (2, 0)])
                     
     
@@ -487,7 +487,7 @@ def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
     print('{} {} search: {:.1f} path cost, {:,d} states reached'
           .format(' ' * 10, title, solution.path_cost, len(reached)))
 
-# draw blank grid
+# draw grid
 def draw_grid(grid):
     "Use matplotlib to draw the grid."
     plt.figure(figsize=(grid.width, grid.height))
@@ -498,7 +498,16 @@ def draw_grid(grid):
         plt.plot([x, x], [0, grid.height], 'k-')
     for y in range(grid.height + 1):
         plt.plot([0, grid.width], [y, y], 'k-')
-        
+    # color the squares with obstacles black
+    for x, y in grid.obstacles:
+        plt.fill([x, x, x + 1, x + 1], [y, y + 1, y + 1, y], 'k')
+    # color the start square red
+    x, y = grid.initial
+    plt.fill([x, x, x + 1, x + 1], [y, y + 1, y + 1, y], 'r')
+    # color the goal square green
+    x, y = grid.goal
+    plt.fill([x, x, x + 1, x + 1], [y, y + 1, y + 1, y], 'g')
+           
     plt.show()
     
  
