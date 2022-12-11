@@ -15,11 +15,11 @@ FIFOQueue = deque
 LIFOQueue = list
 
 class PriorityQueue:
-    """A queue in which the item with minimum f(item) is always popped first."""
+    """A queue in which the item with minimum key is always popped first."""
 
     def __init__(self, items=(), key=lambda x: x): 
         self.key = key
-        self.items = [] # a heap of (score, item) pairs
+        self.items = [] # a heap of (key, item) pairs
         for item in items:
             self.add(item)
          
@@ -29,15 +29,18 @@ class PriorityQueue:
         heapq.heappush(self.items, pair)
 
     def pop(self):
-        """Pop and return the item with min f(item) value."""
+        """Pop and return the item with min key."""
         return heapq.heappop(self.items)[1]
     
     def top(self): 
-        """Return the item with min f(item) value without popping."""
+        """Return the item with min key without popping."""
         return self.items[0][1]
         
     def topkey(self): 
-        """Return the key of the item with min f(item) value without popping."""
+        """Return the key of the item with min key without popping."""
+        # if the queue is empty, return infinity
+        if len(self.items) == 0:
+            return math.inf
         return self.items[0][0]
 
     def __len__(self): return len(self.items)    
@@ -46,6 +49,10 @@ class PriorityQueue:
 def straight_line_distance(A, B):
     "Straight-line distance between two points."
     return sum(abs(a - b)**2 for (a, b) in zip(A, B)) ** 0.5
+    
+# The key of a node on the open list is min(g, rhs) + h
+def calculate_key(cell):
+    return min(grid[cell[0]][cell[1]][1], grid[cell[0]][cell[1]][2]) + grid[cell[0]][cell[1]][3]
 
 # D* Lite
 
@@ -107,17 +114,82 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     # initialize the open list
     # The open list is a priority queue
     
-    # The key of a node on the open list is min(g, rhs) + h
-    # secondary key for tie-breaking is min(g, rhs)
+# The key of a node on the open list is min(g, rhs) + h
     def calculate_key(cell):
         return min(grid[cell[0]][cell[1]][1], grid[cell[0]][cell[1]][2]) + grid[cell[0]][cell[1]][3]
+        
+    def get_successors(cell):
+        # return the list of valid neighbors of the cell (8-connected)
+        # a neighbor is valid if it is not occupied and it is within the grid
+        # a neighbor is a tuple of (x,y) coordinates
+        neighbors = []
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                if (x != 0 or y != 0) and (cell[0] + x >= 0 and cell[0] + x < height) and (cell[1] + y >= 0 and cell[1] + y < width) and grid[cell[0] + x][cell[1] + y][0] == 0:
+                    neighbors.append((cell[0] + x, cell[1] + y))
+        return neighbors
   
+    def compute_shortest_path():
+        # while topkey < key(start) or rhs(start) != g(start)
+        while((openlist.topkey() < calculate_key(start) or grid[start[0]][start[1]][2] != grid[start[0]][start[1]][1])):
+            # u = pop the top item from the open list
+            u = openlist.pop()
+            # if g(u) > rhs(u)
+            if grid[u[0]][u[1]][1] > grid[u[0]][u[1]][2]:
+                # set g(u) = rhs(u)
+                grid[u[0]][u[1]][1] = grid[u[0]][u[1]][2]
+                # for each successor (neighbor) of u
+                for s in get_successors(u):
+                    update_vertex(s)
+            else:
+                # set g(u) = infinity
+                grid[u[0]][u[1]][1] = math.inf
+                # for each successor (neighbor) of u
+                for p in get_successors(u):
+                    print()
+                    # ??? 
         
     openlist = PriorityQueue( key = lambda x: calculate_key(x))
+   
+    # test get_successors
+    print(get_successors((1, 2)))
+    # should be [(0, 1), (0, 2), (0, 3), (1, 1), (1, 3), (2, 1), (2, 2), (2, 3)]
+    print("should be [(0, 1), (0, 2), (0, 3), (1, 1), (1, 3), (2, 1), (2, 2), (2, 3)]")
+    print(get_successors((0, 0)))
+    # should be [(0, 1), (1, 0), (1, 1)]
+    print("should be [(0, 1), (1, 0), (1, 1)]")
+    
+    # assert that (3,4) is not a neighbor to (3,3) bc obstacle
+    print(get_successors((3, 3)))
+    print("should be [(2, 2), (2, 3), (2, 4), (3, 2), ]")
+    
+    # while the robot is not at the goal
+    # while robot != goal:
+    # compute_shortest_path()
+        
+        
+    # check values for testing
+    # topkey
+    print(openlist.topkey())
+    print("should be inf")
+    
+    # start cell's key
+    print(calculate_key(start))
+    print("should be inf")
+    
+    # rhs of start cell
+    print(grid[start[0]][start[1]][2])
+    print("should be inf")
+    
+    # g of start cell
+    print(grid[start[0]][start[1]][1])
+    print("should be inf")
+    
+    
     
 
     
-  
+"""
     # test priority queue
     cell = (1, 2)
     # set g to 1, h to 2, rhs to 3
@@ -138,6 +210,7 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     print(openlist.top())
     print(openlist.topkey())
     print("should be (2, 3) and 2")
+"""
   
         
     
