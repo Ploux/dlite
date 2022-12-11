@@ -477,25 +477,6 @@ def report_counts(counts, name):
     
 def transpose(matrix): return list(zip(*matrix))
 
-'''
-def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
-    "Use matplotlib to plot the grid, obstacles, solution, and reached."
-    reached = list(reached)
-    # make the grid width x height
-    plt.figure(figsize=(grid.width, grid.height))
-    # and draw a border around it
-    plt.plot([0, grid.width, grid.width, 0, 0], [0, 0, grid.height, grid.height, 0], 'k-')
-    plt.axis('off'); plt.axis('equal')
-    plt.scatter(*transpose(grid.obstacles), marker='s', color='darkgrey')
-    plt.scatter(*transpose(reached), 1**2, marker='.', c='blue')
-    plt.scatter(*transpose(path_states(solution)), marker='s', c='blue')
-    plt.scatter(*transpose([grid.initial]), 9**2, marker='D', c='green')
-    plt.scatter(*transpose([grid.goal]), 9**2, marker='8', c='red')
-    if show: plt.show()
-    print('{} {} search: {:.1f} path cost, {:,d} states reached'
-          .format(' ' * 10, title, solution.path_cost, len(reached)))
-'''
-
 # draw grid
 def draw_grid(grid, solution, reached=(), title='Search', show=True):
     "Use matplotlib to draw the grid."
@@ -521,6 +502,12 @@ def draw_grid(grid, solution, reached=(), title='Search', show=True):
     for x, y in path_states(solution):
         if (x, y) not in [grid.initial, grid.goal]:
             plt.fill([x, x, x + 1, x + 1], [y, y + 1, y + 1, y], 'b')
+    # color the squares reached by the search cyan
+    # if they're not the start or goal, or solution path
+    for x, y in reached:
+        if (x, y) not in [grid.initial, grid.goal] + path_states(solution):
+            plt.fill([x, x, x + 1, x + 1], [y, y + 1, y + 1, y], 'c')
+            
             
     # title the plot
     plt.title(title)
