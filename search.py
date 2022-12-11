@@ -389,8 +389,13 @@ def random_lines(X, Y, N=150, lengths=range(6, 12)):
         x, y = random.choice(X), random.choice(Y)
         dx, dy = random.choice(((0, 1), (1, 0)))
         # make sure the line does not go out of the grid
-        length = min(random.choice(lengths), (X[-1] - x) // dx, (Y[-1] - y) // dy)
+        length = random.choice(lengths)
+        if dx == 0:
+            length = min(length, len(Y) - y)
+        else:
+            length = min(length, len(X) - x)
         result |= line(x, y, dx, dy, length)
+        
     
     return result
    
@@ -401,8 +406,8 @@ def line(x, y, dx, dy, length):
 
 random.seed(42) # To make this reproducible
 
-frame = line(-10, 20, 0, 1, 20) | line(150, 20, 0, 1, 20)
-cup = line(102, 44, -1, 0, 15) | line(102, 20, -1, 0, 20) | line(102, 44, 0, -1, 24)
+# frame = line(-10, 20, 0, 1, 20) | line(150, 20, 0, 1, 20)
+# cup = line(102, 44, -1, 0, 15) | line(102, 20, -1, 0, 20) | line(102, 44, 0, -1, 24)
 
 # Some grid routing problems
 
@@ -426,13 +431,19 @@ med = GridProblem(height=10, width=10, initial=(9, 2), goal=(0, 0), obstacles=li
 
 '''
 A large grid, 100x100 cells
-The goal is in the lower left corner (0, 0)
-The start is on the right side, three cells up from the bottom (99, 2)
+The start is on the bottom left corner (0, 0)
+The goal is in the top right corner (99, 99)
 The obstacles are 150 random lines of random lengths within the grid
 '''
-large = GridProblem(height=100, width=100, initial=(99, 2), goal=(0, 0), obstacles=random_lines(X = range(100), Y = range(100), N = 150, lengths = range(6, 12)))
+large = GridProblem(height=100, width=100, initial=(0, 0), goal=(99, 99), obstacles=random_lines(X = range(100), Y = range(100), N = 150, lengths = range(6, 12)))
 
-
+'''
+A large grid, 200x200 cells
+The start is on the bottom left corner (0, 0)
+The goal is in the top right corner (199, 199)
+The obstacle is the frame
+'''
+#framegrid = GridProblem(height=200, width=200, initial=(0, 0), goal=(199, 199), obstacles=frame)
                   
     
     
@@ -461,7 +472,16 @@ def best_first_search(problem, f):
 
 def breadth_first_bfs(problem):
     "Search shallowest nodes in the search tree first; using best-first."
-    return best_first_search(problem, f=len)    
+    return best_first_search(problem, f=len)
+    
+# a* search
+
+def g(n): return n.path_cost
+
+def astar_search(problem, h=None):
+    """Search nodes with minimum f(n) = g(n) + h(n)."""
+    h = h or problem.h
+    return best_first_search(problem, f=lambda n: g(n) + h(n))
 
 
 # report stats on search algorithms
@@ -545,27 +565,17 @@ def draw_grid(grid, solution, reached=(), title='Search', show=True):
 # Testing
 
 '''
-# perform breadth first search with small grid
-# plot results
-reached = {}
-solution = breadth_first_bfs(small)
-draw_grid(small, solution, reached, 'Breadth-first')
-
 # report stats on search algorithms
 report([breadth_first_bfs], [small], verbose=False)
 print("----------------------")
 report([breadth_first_bfs], [small], verbose=True)
-
-# perform breadth first search with med grid
-# plot results
-reached = {}
-solution = breadth_first_bfs(med)
-draw_grid(med, solution, reached, 'Breadth-first')
 '''
 
 
-# perform breadth first search with large grid
+
 # plot results
+map = med
 reached = {}
-solution = breadth_first_bfs(large)
-draw_grid(large, solution, reached, 'Breadth-first')
+solution = astar_search(map)
+draw_grid(map, solution, reached, 'a star search')
+
