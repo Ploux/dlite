@@ -27,6 +27,7 @@ class PriorityQueue:
         """Add item to the queue."""
         pair = (self.key(item), item)
         heapq.heappush(self.items, pair)
+        
 
     def pop(self):
         """Pop and return the item with min key."""
@@ -46,6 +47,20 @@ class PriorityQueue:
     # check for a specific item in the queue
     def __contains__(self, item):
         return any(item == pair[1] for pair in self.items)
+    
+    # remove a specific item from the queue
+    def remove(self, item):
+        for pair in self.items:
+            if pair[1] == item:
+                self.items.remove(pair)
+                heapq.heapify(self.items)
+                return True
+        return False
+        
+    # print the queue
+    def __repr__(self):
+        return 'PriorityQueue({0}, key={1})'.format(self.items, self.key)
+        
         
 
     def __len__(self): return len(self.items)    
@@ -55,9 +70,6 @@ def straight_line_distance(A, B):
     "Straight-line distance between two points."
     return sum(abs(a - b)**2 for (a, b) in zip(A, B)) ** 0.5
     
-# The key of a node on the open list is min(g, rhs) + h
-def calculate_key(cell):
-    return min(grid[cell[0]][cell[1]][1], grid[cell[0]][cell[1]][2]) + grid[cell[0]][cell[1]][3]
 
 # D* Lite
 
@@ -95,9 +107,11 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
         # if the cell is in the open list, remove it
         if cell in openlist:
             openlist.remove(cell)
+            print("Removing", cell)
         # if g(cell) != rhs(cell), insert cell into the open list
         if grid[cell[0]][cell[1]][1] != grid[cell[0]][cell[1]][2]:
-            openlist.insert(cell, calculate_key(cell))     
+            openlist.add(cell) 
+            print("Adding", cell)    
   
     def compute_shortest_path():
         # [occupancy, g, rhs, h]
@@ -122,7 +136,8 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
                     # if p is inconsistent g != rhs
                     if grid[p[0]][p[1]][1] != grid[p[0]][p[1]][2]:
                         # put p into the open list
-                        openlist.insert(p, calculate_key(p))
+                        openlist.add(p, calculate_key(p))
+                        print("Adding", p)
                 # call update_vertex on the popped cell
                 update_vertex(u)
                 
