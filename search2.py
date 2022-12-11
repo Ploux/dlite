@@ -42,6 +42,11 @@ class PriorityQueue:
         if len(self.items) == 0:
             return math.inf
         return self.items[0][0]
+        
+    # check for a specific item in the queue
+    def __contains__(self, item):
+        return any(item == pair[1] for pair in self.items)
+        
 
     def __len__(self): return len(self.items)    
 
@@ -128,6 +133,26 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
                 if (x != 0 or y != 0) and (cell[0] + x >= 0 and cell[0] + x < height) and (cell[1] + y >= 0 and cell[1] + y < width) and grid[cell[0] + x][cell[1] + y][0] == 0:
                     neighbors.append((cell[0] + x, cell[1] + y))
         return neighbors
+    
+    def update_vertex(cell):
+        # if the cell is not the goal
+        if cell != goal:
+            # set rhs(cell) = min cost of all successors of cell
+            # [occupancy, g, rhs, h]
+            #   0         1   2   3
+            # grid[cell[0]][cell[1]][2] = math.inf
+            min_g = math.inf
+            for s in get_successors(cell):
+                if grid[s[0]][s[1]][1] < min_g:
+                    min_g = grid[s[0]][s[1]][1]
+                grid[cell[0]][cell[1]][2] = min_g + straight_line_distance(cell, s)
+        # if the cell is in the open list, remove it
+        if cell in openlist:
+            openlist.remove(cell)
+                
+
+            
+        
   
     def compute_shortest_path():
         # while topkey < key(start) or rhs(start) != g(start)
@@ -150,7 +175,41 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
                     # ??? 
         
     openlist = PriorityQueue( key = lambda x: calculate_key(x))
+    
+        
+    # test priority queue
+    cell = (1, 2)
+    # set g to 1, h to 2, rhs to 3
+    grid[1][2] = [0, 1, 3, 2]
+    openlist.add(cell)
+    
    
+    print(openlist.top())
+    print(openlist.topkey())   
+    print("should be (1, 2) and 3") 
+    
+    cell = (2, 3)
+    # set g to 1, h to 1, rhs to 1
+    grid[2][3] = [0, 1, 1, 1]
+
+    openlist.add(cell)
+    
+    print(openlist.top())
+    print(openlist.topkey())
+    print("should be (2, 3) and 2")
+    
+    # test checking for a cell
+    print(openlist.contains((1, 2)))
+    print("should be True")
+    print(openlist.contains((2, 3)))
+    print("should be True")
+    print(openlist.contains((3, 4)))
+    print("should be False")
+    
+   
+   
+   
+"""
     # test get_successors
     print(get_successors((1, 2)))
     # should be [(0, 1), (0, 2), (0, 3), (1, 1), (1, 3), (2, 1), (2, 2), (2, 3)]
@@ -188,29 +247,8 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     
     
 
-    
 """
-    # test priority queue
-    cell = (1, 2)
-    # set g to 1, h to 2, rhs to 3
-    grid[1][2] = [0, 1, 3, 2]
-    openlist.add(cell)
-    
-   
-    print(openlist.top())
-    print(openlist.topkey())   
-    print("should be (1, 2) and 3") 
-    
-    cell = (2, 3)
-    # set g to 1, h to 1, rhs to 1
-    grid[2][3] = [0, 1, 1, 1]
 
-    openlist.add(cell)
-    
-    print(openlist.top())
-    print(openlist.topkey())
-    print("should be (2, 3) and 2")
-"""
   
         
     
