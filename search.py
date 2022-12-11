@@ -366,9 +366,12 @@ class GridProblem(Problem):
         return action if action not in self.obstacles else state
     
     def actions(self, state):
-        """You can move one cell in any of `directions` to a non-obstacle cell."""
+        """You can move one cell in any of `directions` to a non-obstacle cell. But only if you stay on the grid."""
         x, y = state
-        return {(x + dx, y + dy) for (dx, dy) in self.directions} - self.obstacles
+        return [(x + dx, y + dy) for (dx, dy) in self.directions
+                if 0 <= x + dx < self.width and 0 <= y + dy < self.height]
+        
+ 
 
 
 
@@ -474,6 +477,7 @@ def report_counts(counts, name):
     
 def transpose(matrix): return list(zip(*matrix))
 
+'''
 def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
     "Use matplotlib to plot the grid, obstacles, solution, and reached."
     reached = list(reached)
@@ -490,6 +494,7 @@ def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
     if show: plt.show()
     print('{} {} search: {:.1f} path cost, {:,d} states reached'
           .format(' ' * 10, title, solution.path_cost, len(reached)))
+'''
 
 # draw grid
 def draw_grid(grid, solution, reached=(), title='Search', show=True):
