@@ -66,9 +66,64 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     # the obstacles and block are lists of tuples of (x,y) coordinates
     # the trigger is a tuple of (x,y) coordinates, that when reached, will turn the block cells into obstacles
     
+    # The key of a node on the open list is min(g, rhs) + h
+    def calculate_key(cell):
+        return min(grid[cell[0]][cell[1]][1], grid[cell[0]][cell[1]][2]) + grid[cell[0]][cell[1]][3]
+        
+    def get_successors(cell):
+        # return the list of valid neighbors of the cell (8-connected)
+        # a neighbor is valid if it is not occupied and it is within the grid
+        # a neighbor is a tuple of (x,y) coordinates
+        neighbors = []
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                if (x != 0 or y != 0) and (cell[0] + x >= 0 and cell[0] + x < height) and (cell[1] + y >= 0 and cell[1] + y < width) and grid[cell[0] + x][cell[1] + y][0] == 0:
+                    neighbors.append((cell[0] + x, cell[1] + y))
+        return neighbors
+    
+    def update_vertex(cell):
+        # if the cell is not the goal
+        if cell != goal:
+            # set rhs(cell) = min cost of all successors of cell
+            # [occupancy, g, rhs, h]
+            #   0         1   2   3
+            # grid[cell[0]][cell[1]][2] = math.inf
+            min_g = math.inf
+            for s in get_successors(cell):
+                if grid[s[0]][s[1]][1] < min_g:
+                    min_g = grid[s[0]][s[1]][1]
+                grid[cell[0]][cell[1]][2] = min_g + straight_line_distance(cell, s)
+        # if the cell is in the open list, remove it
+        if cell in openlist:
+            openlist.remove(cell)
+        # if g(cell) != rhs(cell), insert cell into the open list
+        if grid[cell[0]][cell[1]][1] != grid[cell[0]][cell[1]][2]:
+            openlist.insert(cell, calculate_key(cell))     
+  
+    def compute_shortest_path():
+        # while topkey < key(start) or rhs(start) != g(start)
+        while((openlist.topkey() < calculate_key(start) or grid[start[0]][start[1]][2] != grid[start[0]][start[1]][1])):
+            # u = pop the top item from the open list
+            u = openlist.pop()
+            # if g(u) > rhs(u)
+            if grid[u[0]][u[1]][1] > grid[u[0]][u[1]][2]:
+                # set g(u) = rhs(u)
+                grid[u[0]][u[1]][1] = grid[u[0]][u[1]][2]
+                # for each successor (neighbor) of u
+                for s in get_successors(u):
+                    update_vertex(s)
+            else:
+                # set g(u) = infinity
+                grid[u[0]][u[1]][1] = math.inf
+                # for each successor (neighbor) of u
+                for p in get_successors(u):
+                    print()
+                    # ??? 
+    
     # planning phase
        
-   
+    # initialization
+    
     # draw the initial grid
     draw_grid("initial", height, width, start, goal, obstacles)
     
@@ -118,144 +173,13 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     
     # initialize the open list
     # The open list is a priority queue
-    
-# The key of a node on the open list is min(g, rhs) + h
-    def calculate_key(cell):
-        return min(grid[cell[0]][cell[1]][1], grid[cell[0]][cell[1]][2]) + grid[cell[0]][cell[1]][3]
-        
-    def get_successors(cell):
-        # return the list of valid neighbors of the cell (8-connected)
-        # a neighbor is valid if it is not occupied and it is within the grid
-        # a neighbor is a tuple of (x,y) coordinates
-        neighbors = []
-        for x in range(-1, 2):
-            for y in range(-1, 2):
-                if (x != 0 or y != 0) and (cell[0] + x >= 0 and cell[0] + x < height) and (cell[1] + y >= 0 and cell[1] + y < width) and grid[cell[0] + x][cell[1] + y][0] == 0:
-                    neighbors.append((cell[0] + x, cell[1] + y))
-        return neighbors
-    
-    def update_vertex(cell):
-        # if the cell is not the goal
-        if cell != goal:
-            # set rhs(cell) = min cost of all successors of cell
-            # [occupancy, g, rhs, h]
-            #   0         1   2   3
-            # grid[cell[0]][cell[1]][2] = math.inf
-            min_g = math.inf
-            for s in get_successors(cell):
-                if grid[s[0]][s[1]][1] < min_g:
-                    min_g = grid[s[0]][s[1]][1]
-                grid[cell[0]][cell[1]][2] = min_g + straight_line_distance(cell, s)
-        # if the cell is in the open list, remove it
-        if cell in openlist:
-            openlist.remove(cell)
-                
-
-            
-        
-  
-    def compute_shortest_path():
-        # while topkey < key(start) or rhs(start) != g(start)
-        while((openlist.topkey() < calculate_key(start) or grid[start[0]][start[1]][2] != grid[start[0]][start[1]][1])):
-            # u = pop the top item from the open list
-            u = openlist.pop()
-            # if g(u) > rhs(u)
-            if grid[u[0]][u[1]][1] > grid[u[0]][u[1]][2]:
-                # set g(u) = rhs(u)
-                grid[u[0]][u[1]][1] = grid[u[0]][u[1]][2]
-                # for each successor (neighbor) of u
-                for s in get_successors(u):
-                    update_vertex(s)
-            else:
-                # set g(u) = infinity
-                grid[u[0]][u[1]][1] = math.inf
-                # for each successor (neighbor) of u
-                for p in get_successors(u):
-                    print()
-                    # ??? 
-        
     openlist = PriorityQueue( key = lambda x: calculate_key(x))
     
-        
-    # test priority queue
-    cell = (1, 2)
-    # set g to 1, h to 2, rhs to 3
-    grid[1][2] = [0, 1, 3, 2]
-    openlist.add(cell)
-    
-   
-    print(openlist.top())
-    print(openlist.topkey())   
-    print("should be (1, 2) and 3") 
-    
-    cell = (2, 3)
-    # set g to 1, h to 1, rhs to 1
-    grid[2][3] = [0, 1, 1, 1]
-
-    openlist.add(cell)
-    
-    print(openlist.top())
-    print(openlist.topkey())
-    print("should be (2, 3) and 2")
-    
-    # test checking for a cell
-    print(openlist.contains((1, 2)))
-    print("should be True")
-    print(openlist.contains((2, 3)))
-    print("should be True")
-    print(openlist.contains((3, 4)))
-    print("should be False")
-    
-   
-   
-   
-"""
-    # test get_successors
-    print(get_successors((1, 2)))
-    # should be [(0, 1), (0, 2), (0, 3), (1, 1), (1, 3), (2, 1), (2, 2), (2, 3)]
-    print("should be [(0, 1), (0, 2), (0, 3), (1, 1), (1, 3), (2, 1), (2, 2), (2, 3)]")
-    print(get_successors((0, 0)))
-    # should be [(0, 1), (1, 0), (1, 1)]
-    print("should be [(0, 1), (1, 0), (1, 1)]")
-    
-    # assert that (3,4) is not a neighbor to (3,3) bc obstacle
-    print(get_successors((3, 3)))
-    print("should be [(2, 2), (2, 3), (2, 4), (3, 2), ]")
-    
-    # while the robot is not at the goal
-    # while robot != goal:
-    # compute_shortest_path()
-        
-        
-    # check values for testing
-    # topkey
-    print(openlist.topkey())
-    print("should be inf")
-    
-    # start cell's key
-    print(calculate_key(start))
-    print("should be inf")
-    
-    # rhs of start cell
-    print(grid[start[0]][start[1]][2])
-    print("should be inf")
-    
-    # g of start cell
-    print(grid[start[0]][start[1]][1])
-    print("should be inf")
+    # add the goal to the open list
+    openlist.add(goal)
     
     
     
-
-"""
-
-  
-        
-    
-   
-    
-
-        
         
         
     # navigation phase
