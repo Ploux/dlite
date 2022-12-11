@@ -479,7 +479,28 @@ def astar_search(problem, h=None):
     """Search nodes with minimum f(n) = g(n) + h(n)."""
     h = h or problem.h
     return best_first_search(problem, f=lambda n: g(n) + h(n))
+    
+# d* lite search
 
+def d_star_lite(problem):
+    "D* Lite search."
+    global reached
+    node = Node(problem.initial)
+    if problem.is_goal(problem.initial):
+        return node
+    frontier = PriorityQueue([node], key=lambda n: n.path_cost + problem.h(n))
+    reached = {problem.initial: node}
+    while frontier:
+        node = frontier.pop()
+        if problem.is_goal(node.state):
+            return node
+        for child in expand(problem, node):
+            s = child.state
+            if s not in reached or child.path_cost < reached[s].path_cost:
+                reached[s] = child
+                frontier.add(child)
+    return failure
+    
 
 # report stats on search algorithms
 class CountCalls:
@@ -561,6 +582,7 @@ def draw_grid(grid, solution, reached=(), title='Search', show=True):
         
 # Testing
 
+'''
 # report stats on search algorithms
 # bfs vs astar
 # small, med, large
@@ -571,9 +593,8 @@ report([breadth_first_bfs, astar_search], [small, med, large], verbose=True)
 '''
 
 # plot results
-map = large
+map = small
 reached = {}
-solution = astar_search(map)
-draw_grid(map, solution, reached, 'a star search')
-'''
+solution = d_star_lite(map)
+draw_grid(map, solution, reached, 'd star lite search')
 
