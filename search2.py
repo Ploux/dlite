@@ -24,7 +24,7 @@ class PriorityQueue:
             self.add(item)
          
     def add(self, item):
-        """Add item to the queuez."""
+        """Add item to the queue."""
         pair = (self.key(item), item)
         heapq.heappush(self.items, pair)
 
@@ -32,7 +32,13 @@ class PriorityQueue:
         """Pop and return the item with min f(item) value."""
         return heapq.heappop(self.items)[1]
     
-    def top(self): return self.items[0][1]
+    def top(self): 
+        """Return the item with min f(item) value without popping."""
+        return self.items[0][1]
+        
+    def topkey(self): 
+        """Return the key of the item with min f(item) value without popping."""
+        return self.items[0][0]
 
     def __len__(self): return len(self.items)    
 
@@ -103,30 +109,37 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     
     # The key of a node on the open list is min(g, rhs) + h
     # secondary key for tie-breaking is min(g, rhs)
+    def calculate_key(cell):
+        return min(grid[cell[0]][cell[1]][1], grid[cell[0]][cell[1]][2]) + grid[cell[0]][cell[1]][3]
+  
+        
+    openlist = PriorityQueue( key = lambda x: calculate_key(x))
     
-    openlist = PriorityQueue( key = lambda x: min(grid[x[0]][x[1]][1], grid[x[0]][x[1]][2]) + grid[x[0]][x[1]][3])
+
     
+  
     # test priority queue
     cell = (1, 2)
     # set g to 1, h to 2, rhs to 3
     grid[1][2] = [0, 1, 3, 2]
     openlist.add(cell)
     
-    # key should be 3
+   
     print(openlist.top())
+    print(openlist.topkey())   
+    print("should be (1, 2) and 3") 
     
     cell = (2, 3)
     # set g to 1, h to 1, rhs to 1
     grid[2][3] = [0, 1, 1, 1]
-    
-    # add cell to the open list
+
     openlist.add(cell)
     
-    # key should be 2
     print(openlist.top())
-    
-    
-    
+    print(openlist.topkey())
+    print("should be (2, 3) and 2")
+  
+        
     
    
     
