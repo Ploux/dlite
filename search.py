@@ -384,6 +384,7 @@ class GridProblem(Problem):
 
 def random_lines(X, Y, N=150, lengths=range(6, 12)):
     """The set of cells in N random lines of the given lengths."""
+    random.seed(42) # To make this reproducible
     result = set()
     for _ in range(N):
         x, y = random.choice(X), random.choice(Y)
@@ -404,10 +405,6 @@ def line(x, y, dx, dy, length):
     """A line of `length` cells starting at (x, y) and going in (dx, dy) direction."""
     return {(x + i * dx, y + i * dy) for i in range(length)}
 
-random.seed(42) # To make this reproducible
-
-# frame = line(-10, 20, 0, 1, 20) | line(150, 20, 0, 1, 20)
-# cup = line(102, 44, -1, 0, 15) | line(102, 20, -1, 0, 20) | line(102, 44, 0, -1, 24)
 
 # Some grid routing problems
 
@@ -564,18 +561,19 @@ def draw_grid(grid, solution, reached=(), title='Search', show=True):
         
 # Testing
 
-'''
 # report stats on search algorithms
-report([breadth_first_bfs], [small], verbose=False)
-print("----------------------")
-report([breadth_first_bfs], [small], verbose=True)
+# bfs vs astar
+# small, med, large
+
+report([breadth_first_bfs, astar_search], [small, med, large], verbose=True)
+
+
 '''
-
-
 
 # plot results
-map = med
+map = large
 reached = {}
 solution = astar_search(map)
 draw_grid(map, solution, reached, 'a star search')
+'''
 
