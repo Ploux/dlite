@@ -378,15 +378,22 @@ class GridProblem(Problem):
 # Grid Creation
 
 ## The following can be used to create obstacles:
-    
-def random_lines(X=range(15, 130), Y=range(60), N=150, lengths=range(6, 12)):
+
+### random lines, but within the grid
+
+
+def random_lines(X, Y, N=150, lengths=range(6, 12)):
     """The set of cells in N random lines of the given lengths."""
     result = set()
     for _ in range(N):
         x, y = random.choice(X), random.choice(Y)
         dx, dy = random.choice(((0, 1), (1, 0)))
-        result |= line(x, y, dx, dy, random.choice(lengths))
+        # make sure the line does not go out of the grid
+        length = min(random.choice(lengths), (X[-1] - x) // dx, (Y[-1] - y) // dy)
+        result |= line(x, y, dx, dy, length)
+    
     return result
+   
 
 def line(x, y, dx, dy, length):
     """A line of `length` cells starting at (x, y) and going in (dx, dy) direction."""
@@ -408,7 +415,25 @@ cup = line(102, 44, -1, 0, 15) | line(102, 20, -1, 0, 20) | line(102, 44, 0, -1,
 
 small = GridProblem(height=4, width=5, initial=(4, 2), goal=(0, 0), 
                     obstacles=[(1, 1), (2, 1), (2, 0)])
-                    
+
+'''
+A medium grid, 10x10 cells
+The goal is in the lower left corner (0, 0)
+The start is on the right side, three cells up from the bottom (9, 2)
+The obstacles is a line between (5, 0) and (5, 8)
+'''
+med = GridProblem(height=10, width=10, initial=(9, 2), goal=(0, 0), obstacles=line(5, 0, 0, 1, 8))
+
+'''
+A large grid, 100x100 cells
+The goal is in the lower left corner (0, 0)
+The start is on the right side, three cells up from the bottom (99, 2)
+The obstacles are 150 random lines of random lengths within the grid
+'''
+large = GridProblem(height=100, width=100, initial=(99, 2), goal=(0, 0), obstacles=random_lines(X = range(100), Y = range(100), N = 150, lengths = range(6, 12)))
+
+
+                  
     
     
 # Algorithms
@@ -519,6 +544,7 @@ def draw_grid(grid, solution, reached=(), title='Search', show=True):
         
 # Testing
 
+'''
 # perform breadth first search with small grid
 # plot results
 reached = {}
@@ -526,4 +552,20 @@ solution = breadth_first_bfs(small)
 draw_grid(small, solution, reached, 'Breadth-first')
 
 # report stats on search algorithms
+report([breadth_first_bfs], [small], verbose=False)
+print("----------------------")
 report([breadth_first_bfs], [small], verbose=True)
+
+# perform breadth first search with med grid
+# plot results
+reached = {}
+solution = breadth_first_bfs(med)
+draw_grid(med, solution, reached, 'Breadth-first')
+'''
+
+
+# perform breadth first search with large grid
+# plot results
+reached = {}
+solution = breadth_first_bfs(large)
+draw_grid(large, solution, reached, 'Breadth-first')
