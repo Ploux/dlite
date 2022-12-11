@@ -520,10 +520,10 @@ def draw_grid(grid, solution, reached=(), title='Search', show=True):
 # Testing
 
 # perform breadth first search with small grid
-# plot and report results
+# plot results
 reached = {}
 solution = breadth_first_bfs(small)
-# plot_grid_problem(small, solution, reached, 'Breadth-first')
-
-# draw blank grid
 draw_grid(small, solution, reached, 'Breadth-first')
+
+# report stats on search algorithms
+report([breadth_first_bfs], [small], verbose=True)
