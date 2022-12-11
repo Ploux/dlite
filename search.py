@@ -7,14 +7,7 @@ import sys
 from collections import defaultdict, deque, Counter
 from itertools import combinations
 
-%matplotlib inline
-import matplotlib.pyplot as plt
-import random
-import heapq
-import math
-import sys
-from collections import defaultdict, deque, Counter
-from itertools import combinations
+
 
 
 # Problems and Nodes
@@ -370,10 +363,9 @@ class GridProblem(Problem):
         x, y = state
         return [(x + dx, y + dy) for (dx, dy) in self.directions
                 if 0 <= x + dx < self.width and 0 <= y + dy < self.height]
-        
- 
 
-
+class NavigationProblem(GridProblem):
+    
 
 # Grid Creation
 
@@ -442,7 +434,13 @@ The obstacle is the frame
 '''
 #framegrid = GridProblem(height=200, width=200, initial=(0, 0), goal=(199, 199), obstacles=frame)
                   
-    
+'''
+A changing grid, only 5x4 cells
+# The goal is in the lower left corner (0, 0)
+# The start is on the right side, three cells up from the bottom (4, 2)
+# The 3 obstacles are at (1, 1), (2, 1), and (2, 0)
+
+'''    
     
 # Algorithms
           
@@ -582,12 +580,11 @@ def draw_grid(grid, solution, reached=(), title='Search', show=True):
         
 # Testing
 
-'''
 # report stats on search algorithms
-# bfs vs astar
+# bfs vs astar vs d* lite
 # small, med, large
 
-report([breadth_first_bfs, astar_search], [small, med, large], verbose=True)
+report([breadth_first_bfs, astar_search, d_star_lite], [small, med, large])
 
 
 '''
@@ -597,4 +594,5 @@ map = small
 reached = {}
 solution = d_star_lite(map)
 draw_grid(map, solution, reached, 'd star lite search')
+'''
 
