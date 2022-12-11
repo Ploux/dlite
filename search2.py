@@ -85,8 +85,7 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
         # if the cell is not the goal
         if cell != goal:
             # set rhs(cell) = min cost of all successors of cell
-            # [occupancy, g, rhs, h]
-            #   0         1   2   3
+            
             # grid[cell[0]][cell[1]][2] = math.inf
             min_g = math.inf
             for s in get_successors(cell):
@@ -101,11 +100,13 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
             openlist.insert(cell, calculate_key(cell))     
   
     def compute_shortest_path():
+        # [occupancy, g, rhs, h]
+        #   0         1   2   3
         # while topkey < key(start) or rhs(start) != g(start)
         while((openlist.topkey() < calculate_key(start) or grid[start[0]][start[1]][2] != grid[start[0]][start[1]][1])):
             # u = pop the top item from the open list
             u = openlist.pop()
-            # if g(u) > rhs(u)
+            # if g(u) > rhs(u) (overconsistent)
             if grid[u[0]][u[1]][1] > grid[u[0]][u[1]][2]:
                 # set g(u) = rhs(u)
                 grid[u[0]][u[1]][1] = grid[u[0]][u[1]][2]
@@ -115,12 +116,18 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
             else:
                 # set g(u) = infinity
                 grid[u[0]][u[1]][1] = math.inf
-                # for each successor (neighbor) of u
+                
+                # expand the popped cell
                 for p in get_successors(u):
-                    print()
-                    # ??? 
+                    # if p is inconsistent g != rhs
+                    if grid[p[0]][p[1]][1] != grid[p[0]][p[1]][2]:
+                        # put p into the open list
+                        openlist.insert(p, calculate_key(p))
+                # call update_vertex on the popped cell
+                update_vertex(u)
+                
     
-    # planning phase
+
        
     # initialization
     
@@ -142,11 +149,7 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     # bottom right corner is (height-1, width-1)
     
     grid = [[0 for x in range(width)] for y in range(height)]
-    
-    # let's check this and be sure that we can access (3,4) as grid[4][3]
-    # print(grid[4][3])
-    # that doesn't work, try this instead
-    #print(grid[3][4])
+
    
     # set the g and rhs values to infinity
     for x in range(height):
@@ -178,6 +181,8 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     # add the goal to the open list
     openlist.add(goal)
     
+    while robot != goal:
+        compute_shortest_path()
     
     
         
