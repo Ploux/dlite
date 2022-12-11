@@ -63,29 +63,40 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     # h = the heuristic cost of the cheapest path from the cell to the goal
     
     # initialize the grid
+    # top left corner is (0,0)
+    # bottom left corner is (height-1, 0)
+    # top right corner is (0, width-1)
+    # bottom right corner is (height-1, width-1)
+    
     grid = [[0 for x in range(width)] for y in range(height)]
+    
+    # let's check this and be sure that we can access (3,4) as grid[4][3]
+    # print(grid[4][3])
+    # that doesn't work, try this instead
+    #print(grid[3][4])
+   
     # set the g and rhs values to infinity
-    for y in range(height):
-        for x in range(width):
-            grid[y][x] = [0, math.inf, math.inf, math.inf]
+    for x in range(height):
+        for y in range(width):
+            grid[x][y] = [0, math.inf, math.inf, math.inf]
     
     # set the h values to straight-line distance from the cell to the goal
-    for y in range(height):
-        for x in range(width):
-            grid[y][x][3] = straight_line_distance((x, y), goal)
+    for x in range(height):
+        for y in range(width):
+            grid[x][y][3] = straight_line_distance((x, y), goal)
     
     # set the obstacles
     for obstacle in obstacles:
-        grid[obstacle[1]][obstacle[0]] = [1, math.inf, math.inf, math.inf]
+        grid[obstacle[0]][obstacle[1]] = [1, math.inf, math.inf, math.inf]
     
     # make sure the start is not occupied
-    grid[start[1]][start[0]][0]= 0
+    grid[start[0]][start[1]][0]= 0
          
     # set the robot location to the start
     robot = start
     
     # set the rhs value of the goal to 0
-    grid[goal[1]][goal[0]][2] = 0
+    grid[goal[0]][goal[1]][2] = 0
     
     # initialize the open list
     # The open list is a priority queue
@@ -93,40 +104,31 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     # The key of a node on the open list is min(g, rhs) + h
     # secondary key for tie-breaking is min(g, rhs)
     
-    openlist = PriorityQueue(key=lambda x: min(x[1][1], x[1][2]) + x[1][3])
+    openlist = PriorityQueue( key = lambda x: min(grid[x[0]][x[1]][1], grid[x[0]][x[1]][2]) + grid[x[0]][x[1]][3])
     
-    # while U.TopKey() < calculatekey(start) or rhs(start) > g(start) 
-    while openlist.top()[0] < calculatekey(grid, start) or grid[start[1]][start[0]][2] > grid[start[1]][start[0]][1]:
-        # U.TopKey() is the key of the top node on the open list
-        # calculatekey(start) is the key of the start node
-        # rhs(start) is the rhs value of the start node
-        # g(start) is the g value of the start node
-        
-        # get the top node on the open list
-        u = openlist.pop()
-        # get the key of the top node
-        k_old = u[0]
-        # get the cell of the top node
-        u = u[1]
-        
-        # if g(u) > rhs(u)
-        if grid[u[1]][u[0]][1] > grid[u[1]][u[0]][2]:
-            # g(u) = rhs(u)
-            grid[u[1]][u[0]][1] = grid[u[1]][u[0]][2]
-            # for each s in SUCC(u)
-            for s in SUCC(grid, u):
-                # update_vertex(s)
-                update_vertex(grid, openlist, s)
-        # else
-        else:
-            # g(u) = infinity
-            grid[u[1]][u[0]][1] = math.inf
-            # for each s in SUCC(u) U {u}
-            for s in SUCC(grid, u) + [u]:
-                # update_vertex(s)
-                update_vertex(grid, openlist, s)
+    # test priority queue
+    cell = (1, 2)
+    # set g to 1, h to 2, rhs to 3
+    grid[1][2] = [0, 1, 3, 2]
+    openlist.add(cell)
+    
+    # key should be 3
+    print(openlist.top())
+    
+    cell = (2, 3)
+    # set g to 1, h to 1, rhs to 1
+    grid[2][3] = [0, 1, 1, 1]
+    
+    # add cell to the open list
+    openlist.add(cell)
+    
+    # key should be 2
+    print(openlist.top())
     
     
+    
+    
+   
     
 
         
