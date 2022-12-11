@@ -344,37 +344,7 @@ def straight_line_distance(A, B):
     "Straight-line distance between two points."
     return sum(abs(a - b)**2 for (a, b) in zip(A, B)) ** 0.5
     
-# report stats on search algorithms
-class CountCalls:
-    """Delegate all attribute gets to the object, and count them in ._counts"""
-    def __init__(self, obj):
-        self._object = obj
-        self._counts = Counter()
-        
-    def __getattr__(self, attr):
-        "Delegate to the original object, after incrementing a counter."
-        self._counts[attr] += 1
-        return getattr(self._object, attr)
-
-        
-def report(searchers, problems, verbose=True):
-    """Show summary statistics for each searcher (and on each problem unless verbose is false)."""
-    for searcher in searchers:
-        print(searcher.__name__ + ':')
-        total_counts = Counter()
-        for p in problems:
-            prob   = CountCalls(p)
-            soln   = searcher(prob)
-            counts = prob._counts; 
-            counts.update(actions=len(soln), cost=soln.path_cost)
-            total_counts += counts
-            if verbose: report_counts(counts, str(p)[:40])
-        report_counts(total_counts, 'TOTAL\n')
-        
-def report_counts(counts, name):
-    """Print one line of the counts report."""
-    print('{:9,d} nodes |{:9,d} goal |{:5.0f} cost |{:8,d} actions | {}'.format(
-          counts['result'], counts['is_goal'], counts['cost'], counts['actions'], name))    
+  
 
 # Grid Problems
 class GridProblem(Problem):
@@ -465,6 +435,40 @@ def breadth_first_bfs(problem):
     "Search shallowest nodes in the search tree first; using best-first."
     return best_first_search(problem, f=len)    
 
+
+# report stats on search algorithms
+class CountCalls:
+    """Delegate all attribute gets to the object, and count them in ._counts"""
+    def __init__(self, obj):
+        self._object = obj
+        self._counts = Counter()
+        
+    def __getattr__(self, attr):
+        "Delegate to the original object, after incrementing a counter."
+        self._counts[attr] += 1
+        return getattr(self._object, attr)
+
+        
+def report(searchers, problems, verbose=True):
+    """Show summary statistics for each searcher (and on each problem unless verbose is false)."""
+    for searcher in searchers:
+        print(searcher.__name__ + ':')
+        total_counts = Counter()
+        for p in problems:
+            prob   = CountCalls(p)
+            soln   = searcher(prob)
+            counts = prob._counts; 
+            counts.update(actions=len(soln), cost=soln.path_cost)
+            total_counts += counts
+            if verbose: report_counts(counts, str(p)[:40])
+        report_counts(total_counts, 'TOTAL\n')
+        
+def report_counts(counts, name):
+    """Print one line of the counts report."""
+    print('{:9,d} nodes |{:9,d} goal |{:5.0f} cost |{:8,d} actions | {}'.format(
+          counts['result'], counts['is_goal'], counts['cost'], counts['actions'], name))  
+
+
 # Plotting
 
     
@@ -488,7 +492,7 @@ def plot_grid_problem(grid, solution, reached=(), title='Search', show=True):
           .format(' ' * 10, title, solution.path_cost, len(reached)))
 
 # draw grid
-def draw_grid(grid):
+def draw_grid(grid, solution, reached=(), title='Search', show=True):
     "Use matplotlib to draw the grid."
     plt.figure(figsize=(grid.width, grid.height))
     plt.plot([0, grid.width, grid.width, 0, 0], [0, 0, grid.height, grid.height, 0], 'k-')
@@ -507,9 +511,18 @@ def draw_grid(grid):
     # color the goal square green
     x, y = grid.goal
     plt.fill([x, x, x + 1, x + 1], [y, y + 1, y + 1, y], 'g')
-           
-    plt.show()
-    
+    # color the squares in the solution path blue
+    # if they're not the start or goal
+    for x, y in path_states(solution):
+        if (x, y) not in [grid.initial, grid.goal]:
+            plt.fill([x, x, x + 1, x + 1], [y, y + 1, y + 1, y], 'b')
+            
+    # title the plot
+    plt.title(title)
+       
+    if show: plt.show()
+    print('{} {} search: {:.1f} path cost, {:,d} states reached'
+          .format(' ' * 10, title, solution.path_cost, len(reached)))
  
         
 # Testing
@@ -518,7 +531,7 @@ def draw_grid(grid):
 # plot and report results
 reached = {}
 solution = breadth_first_bfs(small)
-plot_grid_problem(small, solution, reached, 'Breadth-first')
+# plot_grid_problem(small, solution, reached, 'Breadth-first')
 
 # draw blank grid
-draw_grid(small)
+draw_grid(small, solution, reached, 'Breadth-first')
