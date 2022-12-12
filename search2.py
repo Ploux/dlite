@@ -60,7 +60,7 @@ class PriorityQueue:
         
     # print the queue
     def __repr__(self):
-        return 'PriorityQueue({0}, key={1})'.format(self.items, self.key)
+        return 'PriorityQueue({0})'.format(self.items)
         
         
 
@@ -100,19 +100,22 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     def update_vertex(cell):
         # if the cell is not the goal
         if cell != goal:
+            # print("Updating", cell)
             # set rhs(cell) = min cost of all successors of cell
-            
-            # grid[cell[0]][cell[1]][2] = math.inf
             min_g = math.inf
-            print(get_successors(cell))
+            # set old_rhs = cell's rhs
+            old_rhs = grid[cell[0]][cell[1]][2]
+            # print(get_successors(cell))
             for s in get_successors(cell):
-                print("s:", s, "g:", grid[s[0]][s[1]][1], "rhs:", grid[s[0]][s[1]][2])
+                # print("s:", s, "g:", grid[s[0]][s[1]][1], "rhs:", grid[s[0]][s[1]][2])
                 if grid[s[0]][s[1]][1] < min_g:
                     min_g = grid[s[0]][s[1]][1]
-                    print("new min_g:", min_g, "at:", s)
-                    grid[cell[0]][cell[1]][2] = min_g + straight_line_distance(cell, s)
-                print("straight line distance between cell ", cell, "and s", s, "is", straight_line_distance(cell, s))
-            print("Updating", cell, "g:", grid[cell[0]][cell[1]][1], "rhs:", grid[cell[0]][cell[1]][2])
+                    # print("new min_g:", min_g, "at:", s)
+                    temp_rhs = min_g + straight_line_distance(cell, s)
+                # print("straight line distance between cell ", cell, "and s", s, "is", straight_line_distance(cell, s))
+            if temp_rhs != old_rhs:
+                grid[cell[0]][cell[1]][2] = temp_rhs
+                print("Updating", cell, "rhs:", grid[cell[0]][cell[1]][2])
         # if the cell is in the open list, remove it
         # if cell in openlist:
             # openlist.remove(cell)
@@ -131,13 +134,15 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
         #for i in range(3):
         while((openlist.topkey() < calculate_key(start) or grid[start[0]][start[1]][2] != grid[start[0]][start[1]][1])):
             # u = pop the top item from the open list
+            print ("openlist:", openlist)
             u = openlist.pop()
-            # print("Popping", u)
+            print("Popping", u)
             # if g(u) > rhs(u) (overconsistent)
             if grid[u[0]][u[1]][1] > grid[u[0]][u[1]][2]:
-                # print("Overconsistent")
+                print("Overconsistent")
                 # set g(u) = rhs(u)
                 grid[u[0]][u[1]][1] = grid[u[0]][u[1]][2]
+                print("Updating", u, "g:", grid[u[0]][u[1]][1])
                 # for each successor (neighbor) of u
                 for s in get_successors(u):
                     update_vertex(s)
@@ -238,7 +243,8 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
                 
         # add the neighbor to the path
         # print ("Next cell ", next_cell, " G value ", min_g)
-        path.append(next_cell)
+        if next_cell != goal:
+            path.append(next_cell)
         # move the robot to the neighbor
         cell = next_cell
     
