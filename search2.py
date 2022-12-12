@@ -32,6 +32,7 @@ class PriorityQueue:
     def pop(self):
         """Pop and return the item with min key."""
         return heapq.heappop(self.items)[1]
+        
     
     def top(self): 
         """Return the item with min key without popping."""
@@ -80,7 +81,10 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     
     # The key of a node on the open list is min(g, rhs) + h
     def calculate_key(cell):
-        return min(grid[cell[0]][cell[1]][1], grid[cell[0]][cell[1]][2]) + grid[cell[0]][cell[1]][3]
+        # return min(g(cell), rhs(cell)) + h(cell)      
+        return min(grid[cell[0]][cell[1]][1], grid[cell[0]][cell[1]][2]) + straight_line_distance(cell, start)
+        
+        
         
     def get_successors(cell):
         # return the list of valid neighbors of the cell (8-connected)
@@ -105,23 +109,28 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
                     min_g = grid[s[0]][s[1]][1]
                 grid[cell[0]][cell[1]][2] = min_g + straight_line_distance(cell, s)
         # if the cell is in the open list, remove it
-        if cell in openlist:
-            openlist.remove(cell)
-            print("Removing", cell)
+        # if cell in openlist:
+            # openlist.remove(cell)
+            # print("Removing", cell)
         # if g(cell) != rhs(cell), insert cell into the open list
         if grid[cell[0]][cell[1]][1] != grid[cell[0]][cell[1]][2]:
-            openlist.add(cell) 
-            print("Adding", cell)    
+            # if cell not in openlist:
+            if cell not in openlist:
+                openlist.add(cell)
+                print("Adding", cell)
   
     def compute_shortest_path():
         # [occupancy, g, rhs, h]
         #   0         1   2   3
         # while topkey < key(start) or rhs(start) != g(start)
+        #for i in range(3):
         while((openlist.topkey() < calculate_key(start) or grid[start[0]][start[1]][2] != grid[start[0]][start[1]][1])):
             # u = pop the top item from the open list
             u = openlist.pop()
+            print("Popping", u)
             # if g(u) > rhs(u) (overconsistent)
             if grid[u[0]][u[1]][1] > grid[u[0]][u[1]][2]:
+                # print("Overconsistent")
                 # set g(u) = rhs(u)
                 grid[u[0]][u[1]][1] = grid[u[0]][u[1]][2]
                 # for each successor (neighbor) of u
@@ -136,8 +145,9 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
                     # if p is inconsistent g != rhs
                     if grid[p[0]][p[1]][1] != grid[p[0]][p[1]][2]:
                         # put p into the open list
-                        openlist.add(p, calculate_key(p))
-                        print("Adding", p)
+                        if p not in openlist:
+                            openlist.add(p)
+                            # print("Adding", p)
                 # call update_vertex on the popped cell
                 update_vertex(u)
                 
@@ -192,19 +202,36 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     # initialize the open list
     # The open list is a priority queue
     openlist = PriorityQueue( key = lambda x: calculate_key(x))
-    
     # add the goal to the open list
     openlist.add(goal)
+    print("Initializing open list")
     
-    while robot != goal:
-        compute_shortest_path()
+    print("Adding goal", goal)
     
+    # compute the shortest path
+    compute_shortest_path()
+    
+    # trace the path
+    path = []
+    cell = start
+    # check each neighbor of the robot
+    while cell != goal:
+        # find the neighbor with the lowest g value
+        min_g = math.inf
+        for s in get_successors(cell):
+            if grid[s[0]][s[1]][1] < min_g:
+                min_g = grid[s[0]][s[1]][1]
+                next_cell = s
+        # add the neighbor to the path
+        path.append(next_cell)
+        # move the robot to the neighbor
+        cell = next_cell
     
         
         
     # navigation phase
 
-def draw_grid(title, height, width, start, goal, obstacles):
+def draw_grid(title, height, width, start, goal, obstacles, path = []):
     "Use matplotlib to draw the grid."
     # set up the plot
     # 0,0 is in the top left corner
@@ -233,6 +260,11 @@ def draw_grid(title, height, width, start, goal, obstacles):
     plt.fill([start[1], start[1]+1, start[1]+1, start[1]], [height-1-start[0], height-1-start[0], height-start[0], height-start[0]], 'r')
     # color the goal green
     plt.fill([goal[1], goal[1]+1, goal[1]+1, goal[1]], [height-1-goal[0], height-1-goal[0], height-goal[0], height-goal[0]], 'g')
+    
+    # draw the path blue
+    for cell in path:
+        if path != goal:
+            plt.fill([cell[1], cell[1]+1, cell[1]+1, cell[1]], [height-1-cell[0], height-1-cell[0], height-cell[0], height-cell[0]], 'b')
 
     # title the plot
     plt.title(title)
@@ -245,6 +277,6 @@ def draw_grid(title, height, width, start, goal, obstacles):
 # a small grid, only 4x5 cells
 # The start is on the right side, three cells up from the bottom
 # The goal is in the lower left corner
-# The 1 obstacle is in the bottom right corner
+# 3 obstacles
 
-dstarlite(4, 5, (1,4), (3,0), [(3,4)])
+dstarlite(4, 5, (1,4), (3,0), [(2,1), (2,2), (3,2)])
