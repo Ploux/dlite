@@ -185,14 +185,15 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
         #   0         1   2  
         # while priority queue is not empty
         
-        for i in range(3):
-        # while len(open_list) > 0:
+        # for i in range(7):
+        while len(open_list) > 0:
             # print topkey
             # print("Topkey is", open_list.topkey())
-            print(open_list)
+            # print(open_list)
             # pop the cell with the lowest f value
             u = open_list.pop()
             pops += 1
+            '''
             print("Popping", u)
             # print g value of popped cell
             # print("g value of popped cell is", grid[u[0]][u[1]][1])
@@ -205,39 +206,79 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
             print()
             print(get_successors(u))
             print()
+            '''
             for s in get_successors(u):
-                expansions += 1
+                
                 # if is the start, return the path
                 if s == start:
+                    grid[s[0]][s[1]][1] = grid[u[0]][u[1]][1] + straight_line_distance(u, s)
                     print("start reached!")
-                    break
+                    # return how many cells were popped and how many cells were expanded
+                    return [pops, expansions]
                 # update g value
                 # if g is infinity, then set it to the g value of the current cell + the cost of the edge
+                
                 if grid[s[0]][s[1]][1] == float('inf'):
+                    expansions += 1
                     # print("infinity")
                     grid[s[0]][s[1]][1] = grid[u[0]][u[1]][1] + straight_line_distance(u, s)
-                    print("Updating g value of", s, "to", grid[s[0]][s[1]][1])
+                    # print("Updating g value of", s, "to", grid[s[0]][s[1]][1])
                     # update the f value
                     open_list.update(s, calculate_key(s))
-                    print("Updating f value of", s, "to", calculate_key(s))
+                    # print("Updating f value of", s, "to", calculate_key(s))
                     
                     # if the cell is not in the open list
                     if s not in open_list:
                         # add it to the open list
                         open_list.add(s)
-                        print("Adding", s, "to the open list")
+                        # print("Adding", s, "to the open list")
                 
                 # if the g value of the neighbor is greater than the g value of the current cell + the cost of the edge
                 if grid[s[0]][s[1]][1] > grid[u[0]][u[1]][1] + straight_line_distance(u, s):
                     # update the g value
                     grid[s[0]][s[1]][1] = grid[u[0]][u[1]][1] + straight_line_distance(u, s)
-                    print("Updating g value of", s, "to", grid[s[0]][s[1]][1])
+                    # print("Updating g value of", s, "to", grid[s[0]][s[1]][1])
                     # update the f value
                     open_list.update(s, calculate_key(s))
-                    print("Updating f value of", s, "to", calculate_key(s))
+                    # print("Updating f value of", s, "to", calculate_key(s))
                     
+        print("No path found")            
                     
-                        
+    def trace_path():   
+        # trace the path
+        
+        # print g and h values for each cell
+        # rounded to the nearest tenth
+        for x in range(height):
+            for y in range(width):
+                print ("[", round(grid[x][y][1],1), round(grid[x][y][2],1), "]", end = " ")
+            print()
+        print()
+        
+        if grid[robot[0]][robot[1]][1] == math.inf:
+            print("No path found")
+            return
+        path = []
+        cell = robot
+        # check each neighbor of the robot
+        while cell != goal:
+            # find the neighbor with the lowest g value
+            min_g = math.inf
+            for s in get_successors(cell):
+                if grid[s[0]][s[1]][1] < min_g:
+                    min_g = grid[s[0]][s[1]][1]
+                    next_cell = s
+                    
+            # add the neighbor to the path
+            # print ("Next cell ", next_cell, " G value ", min_g)
+            if next_cell != goal:
+                path.append(next_cell)
+            # move the robot to the neighbor
+            cell = next_cell
+            
+        # add goal to path at the end
+        path.append(goal)
+        return path                   
 
      
     # initialization
@@ -281,13 +322,14 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
     # draw the initial grid
     draw_grid("Initial A*", height, width, start, goal, obstacles)
     
-
+    '''
     # print g and h values for each cell
     # rounded to the nearest tenth
     for x in range(height):
         for y in range(width):
             print ("[", round(grid[x][y][1],1), round(grid[x][y][2],1), "]", end = " ")
         print()
+    '''
     
     
     # initialize a priority queue and put the goal cell on it
@@ -302,17 +344,14 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
     pops += temp_count[0]
     expansions += temp_count[1]
     
+    # trace the path
+    path = trace_path()
     
-    
-    
-    
-    
-              
-        
-        
-
-    
-    
+    # draw the grid
+    draw_grid("Plan", height, width, start, goal, obstacles, path)
+            
+    # navigation phase
+   
 
 # D* Lite
 
