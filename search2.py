@@ -104,10 +104,15 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
             
             # grid[cell[0]][cell[1]][2] = math.inf
             min_g = math.inf
+            print(get_successors(cell))
             for s in get_successors(cell):
+                print("s:", s, "g:", grid[s[0]][s[1]][1], "rhs:", grid[s[0]][s[1]][2])
                 if grid[s[0]][s[1]][1] < min_g:
                     min_g = grid[s[0]][s[1]][1]
-                grid[cell[0]][cell[1]][2] = min_g + straight_line_distance(cell, s)
+                    print("new min_g:", min_g, "at:", s)
+                    grid[cell[0]][cell[1]][2] = min_g + straight_line_distance(cell, s)
+                print("straight line distance between cell ", cell, "and s", s, "is", straight_line_distance(cell, s))
+            print("Updating", cell, "g:", grid[cell[0]][cell[1]][1], "rhs:", grid[cell[0]][cell[1]][2])
         # if the cell is in the open list, remove it
         # if cell in openlist:
             # openlist.remove(cell)
@@ -117,7 +122,7 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
             # if cell not in openlist:
             if cell not in openlist:
                 openlist.add(cell)
-                print("Adding", cell)
+                # print("Adding", cell)
   
     def compute_shortest_path():
         # [occupancy, g, rhs, h]
@@ -127,7 +132,7 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
         while((openlist.topkey() < calculate_key(start) or grid[start[0]][start[1]][2] != grid[start[0]][start[1]][1])):
             # u = pop the top item from the open list
             u = openlist.pop()
-            print("Popping", u)
+            # print("Popping", u)
             # if g(u) > rhs(u) (overconsistent)
             if grid[u[0]][u[1]][1] > grid[u[0]][u[1]][2]:
                 # print("Overconsistent")
@@ -157,7 +162,7 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     # initialization
     
     # draw the initial grid
-    draw_grid("initial", height, width, start, goal, obstacles)
+    draw_grid("Initial", height, width, start, goal, obstacles)
     
     # the grid is a 2D array of cells
     # each cell contains occupancy, g, rhs, and h values
@@ -201,15 +206,23 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
     
     # initialize the open list
     # The open list is a priority queue
+    # print("Initializing open list")
     openlist = PriorityQueue( key = lambda x: calculate_key(x))
     # add the goal to the open list
     openlist.add(goal)
-    print("Initializing open list")
     
-    print("Adding goal", goal)
+    # print("Adding goal", goal)
     
     # compute the shortest path
     compute_shortest_path()
+    
+    # print g, rhs, and h values for each cell
+    # rounded to the nearest tenth
+    for x in range(height):
+        for y in range(width):
+            print ("[", round(grid[x][y][1],1), round(grid[x][y][2],1), round(grid[x][y][3],1), "]", end = " ")
+        print()
+    
     
     # trace the path
     path = []
@@ -222,11 +235,15 @@ def dstarlite(height, width, start, goal, obstacles, block=None, trigger=None):
             if grid[s[0]][s[1]][1] < min_g:
                 min_g = grid[s[0]][s[1]][1]
                 next_cell = s
+                
         # add the neighbor to the path
+        # print ("Next cell ", next_cell, " G value ", min_g)
         path.append(next_cell)
         # move the robot to the neighbor
         cell = next_cell
     
+    # draw the grid
+    draw_grid("Plan", height, width, start, goal, obstacles, path)
         
         
     # navigation phase
