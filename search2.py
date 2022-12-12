@@ -7,6 +7,8 @@ import sys
 from collections import defaultdict, deque, Counter
 from itertools import combinations
 import numpy as np
+# import time
+import time
 
   
 
@@ -178,9 +180,9 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
         return neighbors
         
     def compute_shortest_path():
-        # keep track of number of pops and expansions
+        # keep track of number of pops and updates
         pops = 0
-        expansions = 0
+        updates = 0
         # [occupancy, g,  h]
         #   0         1   2  
         # while priority queue is not empty
@@ -209,17 +211,17 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
             '''
             for s in get_successors(u):
                 
-                # if is the start, return the path
-                if s == start:
+                # if is the robot, return the path
+                if s == robot:
                     grid[s[0]][s[1]][1] = grid[u[0]][u[1]][1] + straight_line_distance(u, s)
                     print("start reached!")
                     # return how many cells were popped and how many cells were expanded
-                    return [pops, expansions]
+                    return [pops, updates]
                 # update g value
                 # if g is infinity, then set it to the g value of the current cell + the cost of the edge
                 
                 if grid[s[0]][s[1]][1] == float('inf'):
-                    expansions += 1
+                    updates += 1
                     # print("infinity")
                     grid[s[0]][s[1]][1] = grid[u[0]][u[1]][1] + straight_line_distance(u, s)
                     # print("Updating g value of", s, "to", grid[s[0]][s[1]][1])
@@ -247,6 +249,7 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
     def trace_path():   
         # trace the path
         
+        '''
         # print g and h values for each cell
         # rounded to the nearest tenth
         for x in range(height):
@@ -254,7 +257,7 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
                 print ("[", round(grid[x][y][1],1), round(grid[x][y][2],1), "]", end = " ")
             print()
         print()
-        
+        '''
         if grid[robot[0]][robot[1]][1] == math.inf:
             print("No path found")
             return
@@ -282,9 +285,11 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
 
      
     # initialization
-    # keep track of pops and expansions
+    # keep track of pops and updates
     pops = 0
-    expansions = 0
+    updates = 0
+    # start timer
+    tic = time.perf_counter()
     
     # initialize the grid
     grid = [[0 for x in range(width)] for y in range(height)]
@@ -339,10 +344,10 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
     open_list.add(goal)
     
     # compute the shortest path
-    # adding to our pops and expansions
+    # adding to our pops and updates
     temp_count = compute_shortest_path()
     pops += temp_count[0]
-    expansions += temp_count[1]
+    updates += temp_count[1]
     
     # trace the path
     path = trace_path()
@@ -351,6 +356,88 @@ def astar(height, width, start, goal, obstacles, blocks=[]):
     draw_grid("Plan", height, width, start, goal, obstacles, path)
             
     # navigation phase
+    # move robot along path
+    traveled = []
+    blocked = None
+    while robot != goal:
+        # find the next cell in the path
+        next_cell = path[0]
+        # if it's not blocked, move there
+        if next_cell not in blocks:
+            # move the robot
+            robot = next_cell
+            # add the cell to the traveled list
+            traveled.append(robot)
+            # remove the cell from the path
+            path.remove(robot)
+        else:
+            # we have to replan
+            # mark the cell as blocked
+            blocked = next_cell
+            # print grid
+            draw_grid("Blocked!", height, width, start, goal, obstacles, path, traveled, blocked, robot)
+            # remove the cell from the path
+            # path.remove(next_cell)
+            # flag it as occupied
+            # grid[next_cell[0]][next_cell[1]][0] = 1
+            
+            # move blocked cell to obstacles
+            obstacles.append(blocked)
+            
+            # a* does it from scratch
+            
+            # initialize the grid
+            # set the g values to infinity
+            for x in range(height):
+                for y in range(width):
+                    grid[x][y] = [0, math.inf, math.inf]
+            
+            # set the h values to straight-line distance from the cell to the goal
+            for x in range(height):
+                for y in range(width):
+                    grid[x][y][2] = straight_line_distance((x, y), goal)
+                    
+            # set the g value of the goal to 0
+            grid[goal[0]][goal[1]][1] = 0
+            
+            # empty the open list
+            open_list = PriorityQueue( key = lambda x: calculate_key(x))
+            
+            # print length of open list
+            print("Open list length:", len(open_list))
+            
+            # add the robot to the open list
+            open_list.add(goal)
+
+            # compute the shortest path
+            print("Replanning")
+            temp_count = compute_shortest_path()
+            pops += temp_count[0]
+            updates += temp_count[1]
+            
+            # clear planned path
+            path = []
+            # trace the path
+            path = trace_path()
+
+
+            # clear blocked cell
+            blocked = None
+            # print grid
+            draw_grid("Replanned", height, width, start, goal, obstacles, path, traveled, blocked, robot)
+     
+            
+    # print grid
+    draw_grid("Goal Reached", height, width, start, goal, obstacles, path, traveled, blocked, robot)
+    
+    # print the report
+    print("A*")
+    print("Path Length:", len(traveled))
+    print("Pops:", pops)
+    print("updates:", updates)
+    # stop the timer
+    toc = time.perf_counter()
+    print(f"Time: {toc - tic:0.4f} seconds")
    
 
 # D* Lite
@@ -376,6 +463,8 @@ def dstarlite(height, width, start, goal, obstacles, blocks=[]):
         return neighbors
     
     def update_vertex(cell):
+        pops = 0
+        updates = 0
         # if the cell is not the goal
         if cell != goal:
             #print("Updating", cell)
@@ -393,6 +482,7 @@ def dstarlite(height, width, start, goal, obstacles, blocks=[]):
                 # print("straight line distance between cell ", cell, "and s", s, "is", straight_line_distance(cell, s))
             if temp_rhs != old_rhs:
                 grid[cell[0]][cell[1]][2] = temp_rhs
+                updates += 1
                 #print("Updating", cell, "rhs:", grid[cell[0]][cell[1]][2])
         # if the cell is in the open list, remove it
         # if cell in openlist:
@@ -404,11 +494,13 @@ def dstarlite(height, width, start, goal, obstacles, blocks=[]):
             if cell not in openlist:
                 openlist.add(cell)
                 # print("Adding", cell)
+        return [pops, updates]
   
     def compute_shortest_path():
-        # keep track of number of pops and expansions
+        # keep track of number of pops and updates
         pops = 0
-        expansions = 0
+        updates = 0
+        # temp_count = [0, 0]
         # [occupancy, g, rhs, h]
         #   0         1   2   3
         # while topkey < key(robot) or rhs(robot) != g(robot)
@@ -424,28 +516,34 @@ def dstarlite(height, width, start, goal, obstacles, blocks=[]):
                 #print("Overconsistent")
                 # set g(u) = rhs(u)
                 grid[u[0]][u[1]][1] = grid[u[0]][u[1]][2]
+                updates += 1
                 #print("Updating", u, "g:", grid[u[0]][u[1]][1])
                 # for each successor (neighbor) of u
                 for s in get_successors(u):
-                    expansions += 1
-                    update_vertex(s)
+                    temp_count = update_vertex(s)
+                    pops += temp_count[0]
+                    updates += temp_count[1]
+                    
             else:
                 # set g(u) = infinity
                 grid[u[0]][u[1]][1] = math.inf
+                updates += 1
                 
                 # expand the popped cell
                 for p in get_successors(u):
                     # if p is inconsistent g != rhs
-                    expansions += 1
+                    
                     if grid[p[0]][p[1]][1] != grid[p[0]][p[1]][2]:
                         # put p into the open list
                         if p not in openlist:
                             openlist.add(p)
                             # print("Adding", p)
                 # call update_vertex on the popped cell
-                update_vertex(u)
+                temp_count = update_vertex(u)
+                pops += temp_count[0]
+                updates += temp_count[1]
         # return how many cells were popped and how many cells were expanded
-        return [pops, expansions]
+        return [pops, updates]
                 
     def trace_path():   
         # trace the path
@@ -477,9 +575,11 @@ def dstarlite(height, width, start, goal, obstacles, blocks=[]):
 
        
     # initialization
-    # keep track of pops and expansions
+    # keep track of pops and updates
+    # start time
+    tic = time.perf_counter()
     pops = 0
-    expansions = 0
+    updates = 0
     
     # draw the initial grid
     draw_grid("Initial", height, width, start, goal, obstacles)
@@ -534,10 +634,10 @@ def dstarlite(height, width, start, goal, obstacles, blocks=[]):
     # print("Adding goal", goal)
     
     # compute the shortest path
-    # adding to our pops and expansions
+    # adding to our pops and updates
     temp_count = compute_shortest_path()
     pops += temp_count[0]
-    expansions += temp_count[1]
+    updates += temp_count[1]
     
     '''
     # print g, rhs, and h values for each cell
@@ -581,9 +681,11 @@ def dstarlite(height, width, start, goal, obstacles, blocks=[]):
             # print grid
             draw_grid("Blocked!", height, width, start, goal, obstacles, path, traveled, blocked, robot)
             # remove the cell from the path
-            path.remove(next_cell)
+            # path.remove(next_cell)
             # flag it as occupied
             grid[next_cell[0]][next_cell[1]][0] = 1
+            # move blocked cell to obstacles
+            obstacles.append(blocked)
             # raise the blocked cell's rhs value to infinity
             grid[next_cell[0]][next_cell[1]][2] = math.inf
             # put the blocked cell in the open list
@@ -600,15 +702,13 @@ def dstarlite(height, width, start, goal, obstacles, blocks=[]):
             # print("Replanning")
             temp_count = compute_shortest_path()
             pops += temp_count[0]
-            expansions += temp_count[1]
+            updates += temp_count[1]
             # clear planned path
             path = []
             # trace the path
             path = trace_path()
-            # move blocked cell to obstacles
-            obstacles.append(blocked)
-            # flag it as occupied
-            grid[next_cell[0]][next_cell[1]][0] = 1
+
+
             # clear blocked cell
             blocked = None
             # print grid
@@ -621,8 +721,10 @@ def dstarlite(height, width, start, goal, obstacles, blocks=[]):
     # print the report
     print("Path Length:", len(traveled))
     print("Pops:", pops)
-    print("Expansions:", expansions)
-    
+    print("Updates:", updates)
+    # stop time
+    toc = time.perf_counter()
+    print(f"Time: {toc - tic:0.4f} seconds")   
           
 # test
 
@@ -632,5 +734,5 @@ def dstarlite(height, width, start, goal, obstacles, blocks=[]):
 # 3 obstacles
 # block in (1,2)
 
-# dstarlite(4, 5, (1,4), (3,0), [(2,1), (2,2), (3,2)], [(1,2)])
+dstarlite(4, 5, (1,4), (3,0), [(2,1), (2,2), (3,2)], [(1,2)])
 astar(4, 5, (1,4), (3,0), [(2,1), (2,2), (3,2)], [(1,2)])
